@@ -1,0 +1,8 @@
+build/
+.dep/
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.drmlgunit
+*.zip
