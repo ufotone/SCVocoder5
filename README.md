@@ -1,5 +1,7 @@
 # SCVocoder5
 
+[English documentation](README_EN.md)
+
 KORG drumlogue用のボコーダーと専用キャリア・シンセです。
 
 ## 収録ユニット
