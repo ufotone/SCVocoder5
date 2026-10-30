@@ -116,9 +116,7 @@ KORG drumlogue用のボコーダーと専用キャリア・シンセです。
 |---|---:|---:|---|
 |REV TIME|300〜5000ms|1800ms|リバーブの減衰時間の目安を調整します。|
 
-v0.7.0で独立したディレイの設定・処理・専用バッファを削除しました。全17項目で、互換用ダミー項目はありません。
-
-処理順はCHORUS → FLANGER → REVERBです。FLANGERは量に応じて最大約+3.01dBの自動ゲイン補正を行い、音量低下を抑えます。補正はフィードバックの外側で適用し、最終出力の安全リミッターを維持しています。OUTPUTの上限は従来の+12dBです。追加FXの初期値はOFF。MIXの原音・VOICE DRY・MONITORのCARRIER / MODULATORは追加FXをバイパスします。今回の変更はホストテストとARMビルド済み、実機での音量感・音質・負荷は未確認です。
+処理順はCHORUS → FLANGER → REVERBです。FLANGERは量に応じて最大約+3.01dBの自動ゲイン補正を行い、音量低下を抑えます。補正はフィードバックの外側で適用し、最終出力の安全リミッターを維持しています。OUTPUTの上限は従来の+12dBです。追加FXの初期値はOFF。MIXの原音・VOICE DRY・MONITORのCARRIER / MODULATORは追加FXをバイパスします。
 
 ## AGE Carrier
 
@@ -136,9 +134,11 @@ NOTE / FIXEDでは1和音だけを発音し、新しいトリガーで前の和�
 - Page 2: CHORD / ROOT / OCTAVE / MODE。
 - Page 3: BASS（OFF、またはC〜Bの音名。初期値OFF）。
 
-CHORDはMAJ / MIN / DIM / AUG / SUS2 / SUS4 / 7 / MAJ7 / MIN7 / M7B5 / MIN6 / MINb6 / MAJ6 / DIM7 / MMAJ7 / ADD9 / MADD9 / 9 / MAJ9 / MIN9 / 7SUS4 / 6/9 / M6/9 / 7b5 / 7#5 / M7#5 / 7b9 / 7#9 / 7#11 / 7b13 / 13 / M13 / m13 / 11 / m11 / 7SUS2 / M7S2 / M7S4 / ADD11 / MAD11の40種類です。初期値MAJ。既存コードの番号は維持しています。9th / 6/9系は5度を省略した4音に変更しました。11th / 13thなどの拡張コードも一部省略の4音です。コード生成時のレンダーを4音分に絞り、LIVE6は従来の6音演奏を維持します。実機でのCPU負荷減少率は未測定です。
+CHORDはMAJ / MIN / DIM / AUG / SUS2 / SUS4 / 7 / MAJ7 / MIN7 / M7B5 / MIN6 / MINb6 / MAJ6 / DIM7 / MMAJ7 / ADD9 / MADD9 / 9 / MAJ9 / MIN9 / 7SUS4 / 6/9 / M6/9 / 7b5 / 7#5 / M7#5 / 7b9 / 7#9 / 7#11 / 7b13 / 13 / M13 / m13 / 11 / m11 / 7SUS2 / M7S2 / M7S4 / ADD11 / MAD11の40種類です。初期値MAJ。
+9th / 6/9系は5度を省略した4音に変更しました。11th / 13thなどの拡張コードも一部省略の4音です。LIVE6は従来の6音演奏を維持します。
 
-BASSで最低音を独立指定できます。構成音なら低音へ移し、構成音でなければ1音追加します。5音になる場合は自然5度、なければルートを省略して最大4音に収めます。NOTEモードでもBASSは絶対音名です。ROOT・BASSの黒鍵表記はDb / Eb / Gb / Ab / Bbです。設定変更は次のトリガーから反映します。
+BASSで最低音を独立指定できます。構成音なら低音へ移し、構成音でなければ1音追加します。5音になる場合は自然5度、なければルートを省略して最大4音に収めます。
+NOTEモードでもBASSは絶対音名です。ROOT・BASSの黒鍵表記はDb / Eb / Gb / Ab / Bbです。設定変更は次のトリガーから反映します。
 
 例の進行はMODE=FIXED、OCTAVE=3、BASS=Gで指定できます。
 
@@ -149,7 +149,8 @@ BASSで最低音を独立指定できます。構成音なら低音へ移し、�
 |Gm(♭6)|G|MINb6|G3–Bb3–D4–Eb4|
 |A♭M7/G|Ab|MAJ7|G3–Ab3–C4–Eb4|
 
-各コードはROOT・CHORD・BASSを選んで指定します。進行を鳴らすには表のROOTとCHORDを切り替えます。詳細は[AGE Carrierの説明](age-carrier/README.md)を参照してください。
+各コードはROOT・CHORD・BASSを選んで指定します。進行を鳴らすには表のROOTとCHORDを切り替えます。
+詳細は[AGE Carrierの説明](age-carrier/README.md)を参照してください。
 
 表示名はAGE Carrier、ファイル名は `age_carrier.drmlgunit`。元のunit IDと既存8パラメーターの番号を維持しています。
 
