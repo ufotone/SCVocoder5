@@ -126,7 +126,7 @@ Dockerとlogue-sdkが使える環境で:
 ./build.ps1 -SdkRoot 'C:\path\to\logue-sdk'
 ```
 
-SDKの `platform/drumlogue/age-carrier-v040` が未使用であることを確認してください。ビルド成功後の `age_carrier.drmlgunit` をdrumlogueの `Units/Synths/` へコピーします。元のAGE Carrierと同じunit ID（ACR1）を使う改良版です。従来のAGE Carrierを更新します。実機での表示・シーケンサー動作・音質確認は未実施です。
+SDKの `platform/drumlogue/age-carrier-v040` が未使用であることを確認してください。ビルド成功後の `age_carrier.drmlgunit` をdrumlogueの `Units/Synths/` へコピーします。元のAGE Carrierと同じunit ID（ACR1）を使う改良版です。従来のAGE Carrierを更新します。
 
 ## 検証
 
