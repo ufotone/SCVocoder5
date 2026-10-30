@@ -118,7 +118,7 @@ NOTEではステップの音程からコード進行を作れます。FIXEDで�
 
 ## ビルドとインストール
 
-同梱の `age_carrier.drmlgunit` をdrumlogueの `Units/Synths/` へコピーしてください。Docker Desktopを4.97.0へ更新し、ARMビルドの成功を確認しました。変更前の3モード版はユーザーによる実機動作確認済みです。今回の拡張和音・BASS追加版は実機未確認です。
+同梱の `age_carrier.drmlgunit` をdrumlogueの `Units/Synths/` へコピーしてください。
 
 Dockerとlogue-sdkが使える環境で:
 
