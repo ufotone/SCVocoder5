@@ -12,25 +12,27 @@
 #define SC_VOCODER_USE_NEON 0
 #endif
 
+#include "time_fx.h"
+
 // Stability-first portable DSP. SDK calls are isolated in unit.cc.
 // There is no allocation, locking, or filter setup inside the sample loop.
 class Vocoder {
  public:
   enum { Formant, Release, Profile, Mix, Attack, ModGain, OutputGain,
-         Unvoiced, InputMode, Monitor, VoiceDry, Width, Chorus, ParamCount };
+         Unvoiced, InputMode, Monitor, VoiceDry, Width, Chorus, Flanger, FlangerRate, Reverb, ReverbTime, ParamCount };
 
   static int minimum(int p) {
-    return p == Formant ? -12 :
+    return p == ReverbTime ? 300 : (p == Formant ? -12 :
            (p == ModGain || p == OutputGain ? -24 :
-           (p == Release || p == Attack ? 1 : 0));
+           (p == Release || p == Attack ? 1 : 0)));
   }
   static int maximum(int p) {
-    const int values[] = {12, 500, 1, 100, 50, 50, 12, 100, 1, 2, 100, 100, 100};
+    const int values[] = {12, 500, 1, 100, 50, 50, 12, 100, 1, 2, 100, 100, 100, 100, 100, 100, 5000};
     return p >= 0 && p < ParamCount ? values[p] : 0;
   }
   static int initial(int p) {
     // AGE is the default 12-band profile derived from ageage90's WebAudio vocoder.
-    const int values[] = {0, 100, 1, 100, 4, 35, 0, 0, 0, 0, 0, 100, 35};
+    const int values[] = {0, 100, 1, 100, 4, 35, 0, 0, 0, 0, 0, 100, 35, 0, 20, 0, 1800};
     return p >= 0 && p < ParamCount ? values[p] : 0;
   }
 
@@ -70,6 +72,8 @@ class Vocoder {
     chorus_write_ = 0;
     chorus_phase_ = 0.f;
     chorus_warmup_ = kMaxChorusDelay;
+    effects_.prepare(get(Flanger), get(FlangerRate), get(Reverb), get(ReverbTime));
+    effects_.reset();
     monitor_active_ = false;
     fault_ = false;
   }
@@ -89,6 +93,7 @@ class Vocoder {
     // Do not read stale delay contents when returning from a monitor mode.
     if (monitor_active_) {
       chorus_warmup_ = kMaxChorusDelay;
+      effects_.reset();
       monitor_active_ = false;
     }
 
@@ -106,6 +111,7 @@ class Vocoder {
     const float targetMod = db(float(p[ModGain]));
     const float targetOut = db(float(p[OutputGain]));
     const bool split = p[InputMode] == 1;
+    effects_.prepare(p[Flanger], p[FlangerRate], p[Reverb], p[ReverbTime]);
 
     for (uint32_t f = 0; f < frames; ++f) {
       fade_ = std::min(1.f, fade_ + 1.f / 480.f);
@@ -200,6 +206,7 @@ class Vocoder {
       // Keep unvoiced consonants outside the chorus so articulation stays crisp.
       wetL += consonant;
       wetR += consonant;
+      effects_.tick(wetL, wetR);
 
       const float yL = (1.f - mix_) * l + mix_ * wetL + voice_ * mod;
       const float yR = (1.f - mix_) * r + mix_ * wetR + voice_ * mod;
@@ -386,6 +393,7 @@ class Vocoder {
     mapped_formant_ = semitones;
   }
 
+  TimeEffects effects_;
   std::atomic<int> params_[ParamCount];
   BPFBank analysis_, synthesis_;
   HighPass mod_hpf_;

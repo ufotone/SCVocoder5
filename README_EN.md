@@ -4,10 +4,12 @@
 
 A vocoder and dedicated carrier synth for the KORG drumlogue.
 
+[Download the latest release](https://github.com/ufotone/SCVocoder5/releases/latest)
+
 ## Included Units
 
-- `SC Vocoder 5 v0.5.1`: Vocoder for the Master FX slot
-- `AGE Carrier v0.1.1`: Saw-wave chord synth for the MULTI track
+- `SC Vocoder 5 v0.7.0`: Vocoder for the Master FX slot
+- `AGE Carrier v0.4.0`: Saw-wave chord synth for the MULTI track
 
 ## Installation
 
@@ -103,18 +105,51 @@ Refer to the keyboard manual for its MIDI channel setting procedure. If playing 
 
 |Parameter|Range|Default|Description|
 |---|---:|---:|---|
-|CHORUS|0 to 100%|35%|Adds width and depth to the vocoder sound.|
+|CHORUS|0 to 100%|35%|Adds width to the vocoder sound.|
+|FLANGER|0 to 100%|0%|Flanger amount.|
+|FLG RATE|0 to 100%|20%|Flanger speed, mapped to 0.05–1.5Hz.|
+|REVERB|0 to 100%|0%|Stereo reverb amount.|
 
-## AGE Carrier
-
-A six-voice polyphonic saw-wave chord synth. It produces a sustained carrier signal for the vocoder while keys are held.
+### Page 5
 
 |Parameter|Range|Default|Description|
 |---|---:|---:|---|
-|ATTACK|1 to 200ms|5ms|Adjusts the sound onset.|
-|DECAY|1 to 1000ms|80ms|Adjusts the time required to reach the sustain level.|
-|RELEASE|5 to 2000ms|120ms|Adjusts how long the sound remains after the keys are released.|
-|LEVEL|−24 to 0dB|0dB|Adjusts the carrier output level.|
+|REV TIME|300 to 5000ms|1800ms|Approximate reverb decay time.|
+
+Version 0.7.0 removes the dedicated echo controls, processing, state and buffers. There are 17 controls and no compatibility placeholders.
+
+Processing order: CHORUS → FLANGER → REVERB. FLANGER automatically applies makeup gain according to its amount, up to approximately +3.01dB. Compensation is applied outside the feedback loop; the final safety limiter remains active. OUTPUT retains its +12dB maximum. Added effects default to OFF. The MIX dry path, VOICE DRY and CARRIER / MODULATOR monitoring bypass the added effects. Host tests and the ARM build pass; hardware loudness, sound quality and CPU load have not been verified for this version.
+
+## AGE Carrier
+
+Version 0.4.0 extends the original AGE Carrier. Six-note live playing remains the default.
+
+|MODE|Behavior|
+|---|---|
+|LIVE6 (default)|Plays incoming notes, with up to six simultaneous voices.|
+|NOTE|Uses one input note as the root of the selected chord.|
+|FIXED|Uses ROOT, OCTAVE and CHORD selected on the unit; a note triggers the complete chord.|
+
+NOTE and FIXED generate one chord per trigger and disable six-note live playing. New triggers replace the previous chord. Generated voicings use at most four voices, including the bass.
+
+- Page 1: ATTACK / DECAY / RELEASE / LEVEL, with original ranges, defaults and IDs.
+- Page 2: CHORD / ROOT / OCTAVE / MODE.
+- Page 3: BASS, OFF (default) or an absolute note name.
+
+CHORD offers 40 types: MAJ / MIN / DIM / AUG / SUS2 / SUS4 / 7 / MAJ7 / MIN7 / M7B5 / MIN6 / MINb6 / MAJ6 / DIM7 / MMAJ7 / ADD9 / MADD9 / 9 / MAJ9 / MIN9 / 7SUS4 / 6/9 / M6/9 / 7b5 / 7#5 / M7#5 / 7b9 / 7#9 / 7#11 / 7b13 / 13 / M13 / m13 / 11 / m11 / 7SUS2 / M7S2 / M7S4 / ADD11 / MAD11. MAJ is the default; existing chord IDs are retained. Ninth and 6/9 types now omit the fifth; new 11th and 13th types also use explicit four-note voicings with omissions. Chord modes render four oscillator/envelope slots; LIVE6 retains the original six. Hardware CPU savings have not been measured.
+
+BASS places the selected pitch at or below the chord root. A chord-tone bass moves that tone into the bass; a non-chord bass adds one voice. If that would require five notes, the natural fifth is omitted, or the root if no natural fifth is present, to retain a four-note limit. BASS is an absolute pitch class even in NOTE mode. Black keys are displayed as Db / Eb / Gb / Ab / Bb. Changes take effect at the next trigger.
+
+For this progression, set MODE=FIXED, OCTAVE=3, BASS=G:
+
+|Chord|ROOT|CHORD|Generated notes|
+|---|---|---|---|
+|Gm7|G|MIN7|G3–Bb3–D4–F4|
+|Gm6|G|MIN6|G3–Bb3–D4–E4|
+|Gm(b6)|G|MINb6|G3–Bb3–D4–Eb4|
+|AbM7/G|Ab|MAJ7|G3–Ab3–C4–Eb4|
+
+Select each chord using ROOT, CHORD and BASS; switch ROOT and CHORD as shown to play the progression. The display name remains AGE Carrier and the file remains `age_carrier.drmlgunit`. The original unit ID and first eight parameter IDs are retained.
 
 ## Troubleshooting
 

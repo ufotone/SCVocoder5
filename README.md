@@ -4,10 +4,12 @@
 
 KORG drumlogue用のボコーダーと専用キャリア・シンセです。
 
+[最新版のダウンロード](https://github.com/ufotone/SCVocoder5/releases/latest)
+
 ## 収録ユニット
 
-- `SC Vocoder 5 v0.5.1`：Master FX用ボコーダー
-- `AGE Carrier v0.1.1`：MULTIトラック用SAW和音シンセ
+- `SC Vocoder 5 v0.7.0`：Master FX用ボコーダー
+- `AGE Carrier v0.4.0`：MULTIトラック用SAW和音シンセ
 
 ## インストール
 
@@ -104,17 +106,52 @@ KORG drumlogue用のボコーダーと専用キャリア・シンセです。
 |パラメーター|範囲|初期値|説明|
 |---|---:|---:|---|
 |CHORUS|0〜100%|35%|ボコーダー音に広がりを加えます。|
+|FLANGER|0〜100%|0%|フランジャーの量を調整します。|
+|FLG RATE|0〜100%|20%|フランジャーの揺れる速さ（0.05〜1.5Hz）を調整します。|
+|REVERB|0〜100%|0%|リバーブの量を調整します。|
 
-## AGE Carrier
-
-6音ポリフォニックのSAW和音シンセです。鍵盤を押している間、ボコーダー用のキャリア音を出力します。
+### Page 5
 
 |パラメーター|範囲|初期値|説明|
 |---|---:|---:|---|
-|ATTACK|1〜200ms|5ms|音の立ち上がりを調整します。|
-|DECAY|1〜1000ms|80ms|サステイン音量へ移る時間を調整します。|
-|RELEASE|5〜2000ms|120ms|鍵盤を離した後の余韻を調整します。|
-|LEVEL|−24〜0dB|0dB|キャリアの出力音量を調整します。|
+|REV TIME|300〜5000ms|1800ms|リバーブの減衰時間の目安を調整します。|
+
+v0.7.0で独立したディレイの設定・処理・専用バッファを削除しました。全17項目で、互換用ダミー項目はありません。
+
+処理順はCHORUS → FLANGER → REVERBです。FLANGERは量に応じて最大約+3.01dBの自動ゲイン補正を行い、音量低下を抑えます。補正はフィードバックの外側で適用し、最終出力の安全リミッターを維持しています。OUTPUTの上限は従来の+12dBです。追加FXの初期値はOFF。MIXの原音・VOICE DRY・MONITORのCARRIER / MODULATORは追加FXをバイパスします。今回の変更はホストテストとARMビルド済み、実機での音量感・音質・負荷は未確認です。
+
+## AGE Carrier
+
+v0.4.0は従来のAGE Carrierの改良版です。初期値は6音リアルタイム演奏です。
+
+|MODE|動作|
+|---|---|
+|LIVE6（初期値）|最大6音の鍵盤演奏をそのまま鳴らします。|
+|NOTE|入力単音をルートに、選んだコードを生成します。|
+|FIXED|本体でROOT・OCTAVE・CHORDを指定し、単音で和音をトリガーします。|
+
+NOTE / FIXEDでは1和音だけを発音し、新しいトリガーで前の和音を置き換えます。BASSを含め最大4音まで生成します。
+
+- Page 1: ATTACK / DECAY / RELEASE / LEVEL（従来の範囲・初期値・番号を維持）。
+- Page 2: CHORD / ROOT / OCTAVE / MODE。
+- Page 3: BASS（OFF、またはC〜Bの音名。初期値OFF）。
+
+CHORDはMAJ / MIN / DIM / AUG / SUS2 / SUS4 / 7 / MAJ7 / MIN7 / M7B5 / MIN6 / MINb6 / MAJ6 / DIM7 / MMAJ7 / ADD9 / MADD9 / 9 / MAJ9 / MIN9 / 7SUS4 / 6/9 / M6/9 / 7b5 / 7#5 / M7#5 / 7b9 / 7#9 / 7#11 / 7b13 / 13 / M13 / m13 / 11 / m11 / 7SUS2 / M7S2 / M7S4 / ADD11 / MAD11の40種類です。初期値MAJ。既存コードの番号は維持しています。9th / 6/9系は5度を省略した4音に変更しました。11th / 13thなどの拡張コードも一部省略の4音です。コード生成時のレンダーを4音分に絞り、LIVE6は従来の6音演奏を維持します。実機でのCPU負荷減少率は未測定です。
+
+BASSで最低音を独立指定できます。構成音なら低音へ移し、構成音でなければ1音追加します。5音になる場合は自然5度、なければルートを省略して最大4音に収めます。NOTEモードでもBASSは絶対音名です。ROOT・BASSの黒鍵表記はDb / Eb / Gb / Ab / Bbです。設定変更は次のトリガーから反映します。
+
+例の進行はMODE=FIXED、OCTAVE=3、BASS=Gで指定できます。
+
+|コード|ROOT|CHORD|鳴る音|
+|---|---|---|---|
+|Gm7|G|MIN7|G3–Bb3–D4–F4|
+|Gm6|G|MIN6|G3–Bb3–D4–E4|
+|Gm(♭6)|G|MINb6|G3–Bb3–D4–Eb4|
+|A♭M7/G|Ab|MAJ7|G3–Ab3–C4–Eb4|
+
+各コードはROOT・CHORD・BASSを選んで指定します。進行を鳴らすには表のROOTとCHORDを切り替えます。詳細は[AGE Carrierの説明](age-carrier/README.md)を参照してください。
+
+表示名はAGE Carrier、ファイル名は `age_carrier.drmlgunit`。元のunit IDと既存8パラメーターの番号を維持しています。
 
 ## 困ったとき
 

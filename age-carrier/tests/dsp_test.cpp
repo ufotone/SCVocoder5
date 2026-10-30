@@ -1,81 +1,48 @@
 #include "../synth.h"
-
-#include <chrono>
-#include <cmath>
+#define Synth ReferenceSynth
+#include "age_reference.h"
+#undef Synth
+#include <vector>
 #include <cstdio>
 #include <cstdlib>
-#include <vector>
-
-static void check(bool condition, const char* name) {
-  if (!condition) { std::printf("FAIL: %s\n", name); std::exit(1); }
+#include <cstring>
+static void check(bool x, const char* msg) { if(!x){std::printf("FAIL: %s\n",msg);std::exit(1);} }
+static void equal(Synth& a, ReferenceSynth& b) {
+  std::vector<float> x(4096),y(4096);
+  a.Render(x.data(),2048);b.Render(y.data(),2048);
+  for(size_t i=0;i<x.size();++i) if(!(std::isfinite(x[i]) && std::fabs(x[i]-y[i])<1e-5f)){ std::printf("difference at %zu: %.8f %.8f\n",i,x[i],y[i]);check(false,"generated waveform matches manual AGE chord");}
 }
-
-static double energy(const std::vector<float>& signal) {
-  double result = 0.0;
-  for (float value : signal) {
-    check(std::isfinite(value) && std::fabs(value) <= 1.f, "finite bounded output");
-    result += value * value;
-  }
-  return result / signal.size();
-}
-
-int main() {
-  const int frames = 48000;
-  std::vector<float> output(frames * 2), whole(frames * 2), chunked(frames * 2);
-
-  unit_runtime_desc_t descriptor = {};
-  descriptor.samplerate = 48000;
-  descriptor.output_channels = 2;
-
-  Synth synth;
-  check(synth.Init(&descriptor) == 0, "init");
-  synth.NoteOn(60, 110); synth.NoteOn(64, 110); synth.NoteOn(67, 110);
-  synth.Render(output.data(), frames);
-  const double chordEnergy = energy(output);
-  check(chordEnergy > 1e-5, "C major chord output");
-  for (int i = 0; i < frames; ++i) check(output[i * 2] == output[i * 2 + 1], "dual mono output");
-
-  synth.NoteOff(60); synth.NoteOff(64); synth.NoteOff(67);
-  synth.Render(output.data(), frames);
-  double tail = 0.0;
-  for (int i = frames - 4800; i < frames; ++i) tail += output[i * 2] * output[i * 2];
-  check(tail < 1e-8, "release reaches silence");
-
-  Synth a, b;
-  a.NoteOn(60, 100); a.NoteOn(64, 100); a.NoteOn(67, 100);
-  b.NoteOn(60, 100); b.NoteOn(64, 100); b.NoteOn(67, 100);
-  a.Render(whole.data(), frames);
-  for (int offset = 0; offset < frames;) {
-    const int count = std::min(37, frames - offset);
-    b.Render(chunked.data() + offset * 2, count);
-    offset += count;
-  }
-  check(whole == chunked, "block size independence");
-
-  for (int parameter = 0; parameter < Synth::ParamCount; ++parameter) {
-    synth.setParameter(uint8_t(parameter), 100000);
-    check(synth.getParameterValue(uint8_t(parameter)) == Synth::maximum(parameter), "upper parameter bound");
-    synth.setParameter(uint8_t(parameter), -100000);
-    check(synth.getParameterValue(uint8_t(parameter)) == Synth::minimum(parameter), "lower parameter bound");
-    synth.setParameter(uint8_t(parameter), Synth::initial(parameter));
-  }
-
-  synth.Reset();
-  for (int note = 48; note < 60; ++note) synth.NoteOn(uint8_t(note), 127);
-  synth.Render(output.data(), frames);
-  check(energy(output) > 1e-5, "six voices and stealing");
-  synth.AllNoteOff();
-  synth.Render(output.data(), 512);
-  double stopped = 0.0;
-  for (int i = 0; i < 1024; ++i) stopped += output[i] * output[i];
-  check(stopped == 0.0, "all note off is immediate");
-
-  synth.Reset();
-  for (int note = 48; note < 54; ++note) synth.NoteOn(uint8_t(note), 110);
-  auto start = std::chrono::steady_clock::now();
-  for (int i = 0; i < 10; ++i) synth.Render(output.data(), frames);
-  const double elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-  std::printf("PASS: chord, ADR, mono, block independence, bounds, voice stealing, all-note-off.\n");
-  std::printf("Chord RMS %.6f; 10 seconds / 6 voices in %.3fs on host (not ARM benchmark).\n",
-              std::sqrt(chordEnergy), elapsed);
+int main(){
+ Synth live;ReferenceSynth original;
+ check(live.getParameterValue(Synth::Mode)==0,"default LIVE6");
+ for(int n:{48,52,55,59,62,65}){live.NoteOn(uint8_t(n),100);original.NoteOn(uint8_t(n),100);}equal(live,original);
+ live.NoteOff(52);original.NoteOff(52);equal(live,original);
+ live.NoteOn(70,127);original.NoteOn(70,127);equal(live,original);
+ for(int mode:{1,2,0}){live.setParameter(Synth::Mode,mode);float silence[256];live.Render(silence,128);for(float x:silence)check(x==0,"mode switch clears old voices");}
+ const int intervals[10][4]={{0,4,7,0},{0,3,7,0},{0,3,6,0},{0,4,8,0},{0,2,7,0},{0,5,7,0},{0,4,7,10},{0,4,7,11},{0,3,7,10},{0,3,6,10}};
+ for(int mode=0;mode<2;++mode) for(int chord=0;chord<10;++chord) for(int root=0;root<12;++root){
+   Synth a; ReferenceSynth b;
+   a.setParameter(Synth::Mode,mode?1:2);a.setParameter(Synth::Chord,chord);a.setParameter(Synth::Root,root);
+   a.NoteOn(uint8_t(60+root),100);
+   int base=(mode?60:48)+root;
+   for(int i=0;i<(chord>=6?4:3);++i)b.NoteOn(uint8_t(base+intervals[chord][i]),100);
+   equal(a,b);a.PitchBend(12000);b.PitchBend(12000);equal(a,b);
+   a.NoteOff(uint8_t(60+root));for(int i=0;i<(chord>=6?4:3);++i)b.NoteOff(uint8_t(base+intervals[chord][i]));equal(a,b);
+ }
+ std::puts("PASS: 240 chord waveforms, bend and release");
+ // Fourth voice must disappear on a change from seventh to triad.
+ Synth a;ReferenceSynth b;a.setParameter(Synth::Mode,2);a.setParameter(Synth::Chord,7);a.NoteOn(70,127);
+ float warm[128];a.Render(warm,64);b.Render(warm,64);
+ a.setParameter(Synth::Chord,1);a.NoteOn(60,127);for(int n:{48,51,55})b.NoteOn(uint8_t(n),127);
+ a.NoteOff(70);
+ // Prior chord's DC blocker tail is expected; let it settle in both renders.
+ std::vector<float> settle(8192);a.Render(settle.data(),4096);b.Render(settle.data(),4096);equal(a,b);
+ a.NoteOn(60,0);for(int n:{48,51,55})b.NoteOff(uint8_t(n));equal(a,b);
+ a.AllNoteOff();a.GateOn(127);a.GateOff();std::vector<float> tail(48000);a.Render(tail.data(),24000);
+ for(size_t i=40000;i<tail.size();++i)check(std::fabs(tail[i])<1e-8f,"gate releases entire chord");
+ a.AllNoteOff();a.Render(tail.data(),24000);for(float x:tail)check(x==0,"panic clears output");
+ for(int chord=0;chord<10;++chord){a.setParameter(Synth::Mode,1);a.setParameter(Synth::Chord,chord);a.NoteOn(127,127);a.Render(tail.data(),24000);for(float x:tail)check(std::isfinite(x)&&std::fabs(x)<=1,"top MIDI note remains bounded");}
+ for(int i=0;i<Synth::ParamCount;++i){a.setParameter(uint8_t(i),-999);check(a.getParameterValue(uint8_t(i))==Synth::minimum(i),"min clamp");a.setParameter(uint8_t(i),9999);check(a.getParameterValue(uint8_t(i))==Synth::maximum(i),"max clamp");}
+ check(std::strcmp(a.getParameterStrValue(Synth::Chord,7),"MAJ7")==0,"chord label");
+ std::puts("PASS: 240 generated chords match AGE reference, pitch bend, release, stale note-off, seventh-to-triad, gate, panic, MIDI bounds, parameter bounds, labels.");
 }

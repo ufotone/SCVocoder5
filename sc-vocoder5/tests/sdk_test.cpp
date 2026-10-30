@@ -2,12 +2,14 @@
 #include "../vocoder.h"
 #include <cstdio>
 #include <cstdlib>
+#include <initializer_list>
 static void check(bool ok) {if(!ok)std::exit(1);}
 int main() {
  unit_runtime_desc_t d={};d.target=unit_header.target;d.api=UNIT_API_VERSION;d.samplerate=48000;d.input_channels=4;d.output_channels=2;
  check(unit_init(nullptr)==k_unit_err_undef);
  check(unit_init(&d)==0);check(unit_header.num_params==Vocoder::ParamCount);
  for(int p=0;p<Vocoder::ParamCount;++p){check(unit_header.params[p].min==Vocoder::minimum(p));check(unit_header.params[p].max==Vocoder::maximum(p));check(unit_header.params[p].init==Vocoder::initial(p));check(unit_get_param_value((uint8_t)p)==Vocoder::initial(p));}
+ for(int removed:{17,18,19,255}){unit_set_param_value((uint8_t)removed,99999);check(unit_get_param_value((uint8_t)removed)==0);}
  d.samplerate=44100;check(unit_init(&d)==k_unit_err_samplerate);d.samplerate=48000;
  d.input_channels=3;check(unit_init(&d)==k_unit_err_geometry);d.input_channels=2;check(unit_init(&d)==0);
  d.target=0;check(unit_init(&d)==k_unit_err_target);d.target=unit_header.target;
