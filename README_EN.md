@@ -1,6 +1,12 @@
 # SCVocoder5
 
-[日本語ドキュメント](README.md)
+## 🌐 Language / 言語
+
+### [日本語](README.md)　|　[English](README_EN.md)
+
+Current language: **English**
+
+---
 
 A vocoder and dedicated carrier synth for the KORG drumlogue.
 

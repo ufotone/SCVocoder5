@@ -1,6 +1,12 @@
 # SCVocoder5
 
-[English documentation](README_EN.md)
+## 🌐 Language / 言語
+
+### [日本語](README.md)　|　[English](README_EN.md)
+
+表示言語：**日本語**
+
+---
 
 KORG drumlogue用のボコーダーと専用キャリア・シンセです。
 
