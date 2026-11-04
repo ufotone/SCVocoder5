@@ -34,7 +34,7 @@ A vocoder and dedicated carrier synth for the KORG drumlogue.
 
 1. Select `AGE Carrier` as the user synth on the MULTI track.
 2. Connect a MIDI keyboard and set its MIDI channel as described below.
-3. Connect a microphone with a preamp to AUDIO IN.
+3. Connect a microphone with a preamp to AUDIO IN.( Must be Line level)
 4. Hold `SHIFT` and press the `BD` button, then set AUDIO IN `ROUTE` to `SIDECH`.
 5. Select `SC Vocoder 5` as the Master FX.
 6. Hold a chord on the keyboard while speaking into the microphone.
