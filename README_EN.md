@@ -43,7 +43,7 @@ A vocoder and dedicated carrier synth for the KORG drumlogue.
 |Parameter|Recommended value|
 |---|---:|
 |RANGE|AGE|
-|MOD GAIN|+35dB|
+|MOD GAIN|+0 ~ +35dB|
 |UNVOICED|20%|
 |CHORUS|35%|
 |MIX|100%|
