@@ -53,6 +53,8 @@ Set `MONITOR` to `CARRIER` to hear the synth, `MODULATOR` to hear the microphone
 
 ## Microphone and AUDIO IN Setup
 
+!! Don’t forget to amplify your microphone signal to line level before plugging it into the drumlogue’s audio input !!
+
 As a general rule, use a self-powered microphone with a built-in preamp, or connect the microphone through an external mic preamp. A typical passive microphone connected directly to the drumlogue may not provide enough level. If the microphone requires power, use its own battery, power supply, or an external preamp.
 
 1. Turn down the microphone or preamp output, then connect it to the drumlogue AUDIO IN.
